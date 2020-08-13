@@ -73,7 +73,7 @@ while(1):
             # print(q1/q2)
             # print(vehicle['prob'])
             if q1/q2 > 0.000: #0.03:
-                draw.text(((x1+x2)/2, y1-2), str(vehicle['prob']), font=fnt, fill=(255,0,0,255))
+                draw.text(((x1+x2)/2, y1-2), str(vehicle['conf']), font=fnt, fill=(255,0,0,255))
                 if 'plate' in vehicle.keys():
                     result = vehicle['plate']['result']
                     province = vehicle['plate']['province_result']
@@ -84,6 +84,7 @@ while(1):
                     draw.text(((x1+x2)/2, y1+50), province+str(province_prob), font=fnt2, fill=(0,255,255,255))                   
 
                     pts = vehicle['plate']['ptspx']
+                    print('pts:',pts)
                     for i in range(4):
                         pt1 = tuple(pts[:,i].astype(int).tolist())
                         pt2 = tuple(pts[:,(i+1)%4].astype(int).tolist())

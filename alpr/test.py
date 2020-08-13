@@ -126,12 +126,15 @@ with lprnet_graph.as_default() as g:
 
 print(K.get_session() == wpod_sess)
 
+
 test_transforms = transforms.Compose([
+        transforms.ToPILImage(),
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model_ft = torch.load('./models/resNet/dit_08_06.h5',  map_location='cuda:0')
 model_ft = model_ft.to(device)
@@ -139,6 +142,13 @@ model_ft.eval()
 f = open('./models/resNet/dit_08_06.txt','r')
 class_name=f.readline().split(',')
 f.close()
+
+
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
 def predict_image(image):
     with torch.no_grad():
         image_tensor = test_transforms(image).float()
@@ -147,9 +157,9 @@ def predict_image(image):
         input = input.to(device)
         output = model_ft(input)
         result = output.data.cpu().numpy()
+        prob_result = softmax(result[0])
         index = result.argmax()
-        return class_name[index], result[index]
-
+        return class_name[index], prob_result[index]
 
 '''Recv Data'''
 context = zmq.Context()
@@ -220,20 +230,25 @@ while True:
             # print("S : ", Shape(Llp[0].pts))
             # print((Ilp*255.).astype('uint8'))
 
+            #### Calculate plate bbox
+            ptspx = ptsh.copy()
+            ptspx[0] +=  tl[0] # Add x 
+            ptspx[1] +=  tl[1] # Add y
+
             Ilp = cv2.resize(Ilp,(94,24))
             start_time_ocr= time.time()
             result = predict_oneimg(Ilp*255,inputs,seq_len,lprnet_sess,decoded,CHARS)
             # result = 'test'
             ### Predict Province 
             license_img = np.array([LlpImgs[0]])
-            print('License range:',np.max(license_img),np.min(license_img))
+            # print('License range:',np.max(license_img),np.min(license_img))
             result_province = province_model.predict(license_img)[0]
-            print('---predict: ',result_province,'----')
+            # print('---predict: ',result_province,'----')
             inx = np.argmax(result_province)
             province_result = province_name[inx]
             province_prob = result_province[inx]
 
-            print('ocr time: ', time.time()-start_time_alpr)
+            # print('ocr time: ', time.time()-start_time_alpr)
             # print("Result : ",result)
             # out = [x.encode('ascii') for x in result]
             # print(type(result[0]))
@@ -242,17 +257,16 @@ while True:
 
             vehicle_detail['plate'] = {
                             'result':result,
-                            'province_result': province_result, 
+                            'province_result': province_result,
                             'province_prob': province_prob,
-                            'image': (LlpImgs[0]*255.).astype('uint8'),
-                            'car_image': im2single(Ivehicle),                            
+                            'ptspx':, 
                             }
-        
-        vehicle_detail['car'] = {
-            'car_info':car_info,
-            'car_prob':car_prob,
-        }
 
+        vehicle_detail['car'] = {
+                'car_info':car_info,
+                'car_prob':car_prob,
+                }
+        
         vehicle.append(vehicle_detail)
 
     data = {
@@ -262,7 +276,7 @@ while True:
         # 'plate':LlpImgs,
         'frame_id':frame_id,
         # 'result':result,
-        'meta':data['meta'],
+        # 'meta':data['meta'],
         # 'test': ptsh,
         # 'car': im2single(Ivehicle),
         'vehicles': vehicle,

@@ -12,3 +12,4 @@ __pycache__/
 models/
 env/
 *.h5
+*.mp4
