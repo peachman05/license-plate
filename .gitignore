@@ -1,0 +1,14 @@
+*.weights
+__pychache__/
+libdarknet.*
+darknet
+obj/
+image/
+txt/
+.vscode/
+*.png
+data/
+__pycache__/
+models/
+env/
+*.h5

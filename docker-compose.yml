@@ -1,0 +1,66 @@
+version: '2.3'
+networks:
+    zmq:
+        external : true
+services:
+    streamer_camera:
+        build: ./streamer_camera
+        command: sh runserver.sh
+        volumes:
+            - ./streamer_camera:/streamer_camera
+        ports: 
+            - 5559:5559
+        networks:
+            - zmq
+        environment:
+            - PYTHONUNBUFFERED=1
+
+    streamer_detector:
+        build: ./streamer_detector
+        command: sh runserver.sh
+        volumes:
+            - ./streamer_detector:/streamer_detector
+        networks:
+            - zmq
+        environment:
+            - PYTHONUNBUFFERED=1
+    
+    forwarder:
+        build: ./forwarder
+        command: sh runserver.sh
+        volumes:
+            - ./forwarder:/forwarder
+        ports: 
+            - 5564:5564
+        networks:
+            - zmq
+        environment:
+            - PYTHONUNBUFFERED=1
+
+    vehicle:
+        build: ./vehicle
+        runtime: nvidia
+        command: python3 readCamera.py
+        networks:
+            - zmq
+        depends_on: 
+            - streamer_camera
+            - streamer_detector
+        environment:
+            - PYTHONUNBUFFERED=1
+
+    alpr:
+        build: ./alpr
+        runtime: nvidia
+        command: python3 test.py
+        volumes:
+            - ./alpr:/alpr
+        networks:
+            - zmq
+        depends_on: 
+            - streamer_detector
+            - forwarder
+        environment:
+            - PYTHONUNBUFFERED=1
+    
+    
