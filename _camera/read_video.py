@@ -36,7 +36,7 @@ cap = cv2.VideoCapture('/home/peachman/Documents/Video/data1440 2k 30fps.mp4')
 # cap = cv2.VideoCapture('/home/msi/Documents/Video/data1440 2k 60fps.mp4')
 # cap = cv2.VideoCapture('/home/msi/Documents/Video/data2160 4k 30fps.mp4')
 # start_frame = 5000
-start_frame = 200#1100 #1200 #200
+start_frame = 0#1100 #1200 #200
 total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 print('total :', total)
 cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
@@ -45,7 +45,7 @@ count = 0
 count2 = 0
 camera_id = 0
 frame_list = [200, 300]
-jump_rate = 10
+jump_rate = 1
 while(True):
     # Capture frame-by-frame
     if count < 10:
@@ -78,7 +78,7 @@ while(True):
     else:
         count = 0
         print('sleep 60 seconds')
-        time.sleep(10)
+        time.sleep(15)
 # When everything done, release the capture
 cap.release()
 cv2.destroyAllWindows()

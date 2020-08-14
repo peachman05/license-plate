@@ -14,7 +14,7 @@ fnt = ImageFont.truetype("Sarun's ThangLuang.ttf", 40)
 fnt2 = ImageFont.truetype("Sarun's ThangLuang.ttf", 30)
 
 images_buffer = []
-buffer_size = 15
+buffer_size = 25
 buffer_send = 10
 
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
@@ -22,7 +22,7 @@ width = int(2560/1.5)
 height = int(1440/1.5)
 width2 = 2560
 height2 = 1440
-out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (width,height))
+out = cv2.VideoWriter('output.mp4', fourcc, 10.0, (width,height))
 outfull = cv2.VideoWriter('outputFull.mp4', fourcc, 10.0, (width2,height2))
 
 Exit = False
@@ -42,7 +42,7 @@ while(1):
         data_temp = data.copy()
         del data_temp['frame']
         dict_list.append(data_temp)
-        outfull.write(frame)
+        # outfull.write(frame)
 
         # plate = data['plate']
         # result = data['result']
@@ -78,12 +78,13 @@ while(1):
                 # draw.text(((x1+x2)/2, y1-2), str(vehicle['conf']), font=fnt, fill=(255,0,0,255))
                 if 'plate' in vehicle.keys():
                     result = vehicle['plate']['result']
+                    result = result.replace(' ', '').replace('_', '')
                     province = vehicle['plate']['province_result']
                     province_prob = vehicle['plate']['province_prob']
                     # draw.rectangle(((x1, y1), (x2, y2)), fill=(0,255,0,20))
                     draw.rectangle(((x1, y1), (x2, y2)))
                     draw.text(((x1+x2)/2, y1+20), result, font=fnt, fill=(0,255,0,20))
-                    if province_prob > 0.7:
+                    if province_prob > 0.4:
                         draw.text(((x1+x2)/2, y1+50), province+str(province_prob), font=fnt2, fill=(0,255,255,255))                   
 
                     pts = vehicle['plate']['ptspx']
@@ -120,14 +121,14 @@ while(1):
         # print(frame2.shape)
 
         frame2 = np.array(img)        
-        resize_img = cv2.resize(frame2,None,fx=0.7,fy=0.7)
+        # resize_img = cv2.resize(frame2,None,fx=0.7,fy=0.7)
         out_image = cv2.resize(frame2,(width,height))
         # out.write(out_image)
         # cv2.imshow('Output',resize_img)
         print('{}: get {} frame'.format(count, i),end='\r')
         # print('get id:', data['frame_id'])   
 
-        images_buffer.append({'frame_id': data['frame_id'], 'image': out_image})
+        images_buffer.append({'frame_id': data['frame_id'], 'image': out_image, 'image_full':frame})
 
         # cv2.imshow('Output',resize_img)
         # cv2.waitKey(90)
@@ -142,6 +143,8 @@ while(1):
     for dictObj in sort_frames[:buffer_send]:
         # print('id: ', dictObj['frame_id'])
         out.write(dictObj['image'])
+        outfull.write(dictObj['image_full'])
+        # resize_img = cv2.resize(frame2,None,fx=0.7,fy=0.7)
         cv2.imshow('Output',dictObj['image'])
         # print(data['test'])
         if cv2.waitKey(90) & 0xFF == ord('q'):
